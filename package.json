@@ -1,0 +1,27 @@
+{
+  "name": "personallm",
+  "module": "src/main.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bun src/main.ts",
+    "dev": "bun --watch src/main.ts",
+    "pm2": "pm2 start pm2_process.json",
+    "setup": "bun setup.ts",
+    "postinstall": "bun postinstall.ts",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/bun": "latest",
+    "vitest": "^3.1.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "bun-types": "latest"
+  },
+  "trustedDependencies": [
+    "@biomejs/biome"
+  ]
+}

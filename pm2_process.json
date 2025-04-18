@@ -1,0 +1,20 @@
+{
+  "apps": [
+    {
+      "name": "PersonalLM",
+      "script": "bun",
+      "args": "src/main.ts",
+      "cwd": "/Users/alexdavis/ghq/github.com/armincerf/personallm",
+      "instances": 1,
+      "autorestart": true,
+      "watch": false,
+      "max_memory_restart": "1G",
+      "env": {
+        "NODE_ENV": "production"
+      },
+      "log_date_format": "YYYY-MM-DD HH:mm:ss",
+      "out_file": "logs/personallm-out.log",
+      "error_file": "logs/personallm-error.log"
+    }
+  ]
+} 
