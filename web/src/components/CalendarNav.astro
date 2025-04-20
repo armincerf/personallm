@@ -1,0 +1,120 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+type Props = {
+    summaries: CollectionEntry<"summaries">[];
+    currentSummary?: CollectionEntry<"summaries">;
+};
+
+const { summaries, currentSummary } = Astro.props;
+
+// Group summaries by year and month
+const groupedSummaries = summaries.reduce(
+    (acc, summary) => {
+        const date = summary.data.date;
+        const year = date.getFullYear();
+        const month = date.getMonth();
+
+        if (!acc[year]) {
+            acc[year] = {};
+        }
+
+        if (!acc[year][month]) {
+            acc[year][month] = [];
+        }
+
+        acc[year][month].push(summary);
+        return acc;
+    },
+    {} as Record<number, Record<number, CollectionEntry<"summaries">[]>>,
+);
+
+// Sort years and months
+const sortedYears = Object.keys(groupedSummaries)
+    .map(Number)
+    .sort((a, b) => b - a);
+
+const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+];
+
+// Function to format path for a summary
+function getSummaryPath(summary: CollectionEntry<"summaries">) {
+    const date = summary.data.date;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `/archive/${year}/${month}/${day}`;
+}
+---
+
+<div class="calendar-nav bg-white p-4 rounded-lg shadow-md">
+    <h2 class="text-lg font-semibold mb-4">Archive</h2>
+
+    {
+        sortedYears.map((year) => (
+            <div class="mb-4">
+                <h3 class="text-md font-medium mb-2">{year}</h3>
+
+                {Object.keys(groupedSummaries?.[year] ?? {})
+                    .map(Number)
+                    .sort((a, b) => b - a)
+                    .map((month) => (
+                        <div class="mb-3">
+                            <h4 class="text-sm font-medium mb-1">
+                                {monthNames[month]}
+                            </h4>
+                            <ul class="space-y-1">
+                                {groupedSummaries?.[year]?.[month]
+                                    ?.sort((a, b) => {
+                                        // Sort by day (descending) and then by index
+                                        const dateA = a.data.date.getDate();
+                                        const dateB = b.data.date.getDate();
+                                        if (dateA !== dateB)
+                                            return dateB - dateA;
+                                        return (
+                                            (b.data.index || 1) -
+                                            (a.data.index || 1)
+                                        );
+                                    })
+                                    .map((summary) => {
+                                        const date = summary.data.date;
+                                        const day = date.getDate();
+                                        const isActive =
+                                            currentSummary &&
+                                            currentSummary.id === summary.id;
+
+                                        return (
+                                            <li>
+                                                <a
+                                                    href={getSummaryPath(
+                                                        summary,
+                                                    )}
+                                                    class={`block py-1 px-2 rounded hover:bg-gray-100 ${isActive ? "bg-blue-100 font-medium" : ""}`}
+                                                >
+                                                    {day} -{" "}
+                                                    {summary.data.title ||
+                                                        `Summary #${summary.data.index || 1}`}
+                                                </a>
+                                            </li>
+                                        );
+                                    })}
+                            </ul>
+                        </div>
+                    ))}
+            </div>
+        ))
+    }
+</div>

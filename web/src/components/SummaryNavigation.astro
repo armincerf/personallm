@@ -1,0 +1,93 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+type Props = {
+    currentSummary: CollectionEntry<"summaries">;
+    allSummaries: CollectionEntry<"summaries">[];
+};
+
+const { currentSummary, allSummaries } = Astro.props;
+
+// Sort summaries by date (ascending)
+const sortedSummaries = [...allSummaries].sort((a, b) => {
+    const dateA = a.data.date.getTime();
+    const dateB = b.data.date.getTime();
+
+    if (dateA === dateB) {
+        return (a.data.index || 1) - (b.data.index || 1);
+    }
+
+    return dateA - dateB;
+});
+
+// Find index of current summary
+const currentIndex = sortedSummaries.findIndex(
+    (summary) => summary.id === currentSummary.id,
+);
+
+// Get prev and next summaries
+const prevSummary = currentIndex > 0 ? sortedSummaries[currentIndex - 1] : null;
+const nextSummary =
+    currentIndex < sortedSummaries.length - 1
+        ? sortedSummaries[currentIndex + 1]
+        : null;
+
+// Helper function to format date
+function formatDate(date: Date): string {
+    return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+    });
+}
+
+// Helper function to get summary path
+function getSummaryPath(summary: CollectionEntry<"summaries">): string {
+    const date = summary.data.date;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const index = summary.data.index || 1;
+
+    return `/archive/${year}/${month}/${day}/${index}`;
+}
+---
+
+<div class="flex justify-between items-center my-6">
+    {
+        prevSummary ? (
+            <a
+                href={getSummaryPath(prevSummary)}
+                class="flex items-center space-x-1 text-blue-600 hover:underline"
+            >
+                <span class="text-lg">&larr;</span>
+                <span>
+                    <span class="text-sm text-gray-500 block">Previous</span>
+                    <span>{formatDate(prevSummary.data.date)}</span>
+                </span>
+            </a>
+        ) : (
+            <div />
+        )
+    }
+
+    {
+        nextSummary ? (
+            <a
+                href={getSummaryPath(nextSummary)}
+                class="flex items-center space-x-1 text-blue-600 hover:underline"
+            >
+                <span>
+                    <span class="text-sm text-gray-500 block text-right">
+                        Next
+                    </span>
+                    <span>{formatDate(nextSummary.data.date)}</span>
+                </span>
+                <span class="text-lg">&rarr;</span>
+            </a>
+        ) : (
+            <div />
+        )
+    }
+</div>
+

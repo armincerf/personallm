@@ -1,16 +1,19 @@
 import { GoogleGenAI } from "@google/genai";
-import { config } from "./config.js";
+import { config } from "./config/index.js";
 
 // Initialize the SDK client
 const genAI = new GoogleGenAI({ apiKey: config.geminiApiKey });
 
-export async function summarizeWithLLM(fullContext: string): Promise<string> {
+export async function summarizeWithLLM(
+	fullContext: string,
+	prompt = config.prompt,
+): Promise<string> {
 	try {
 		// Make the API call using the SDK
 		const result = await genAI.models.generateContent({
 			model: config.geminiModelName,
 			contents: [
-				{ role: "user", parts: [{ text: config.prompt }] },
+				{ role: "user", parts: [{ text: prompt }] },
 				{ role: "user", parts: [{ text: fullContext }] },
 			],
 		});

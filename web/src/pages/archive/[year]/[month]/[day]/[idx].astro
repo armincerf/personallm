@@ -1,0 +1,73 @@
+---
+import { getCollection } from "astro:content";
+import SummaryLayout from "../../../../../layouts/SummaryLayout.astro";
+import CalendarNav from "../../../../../components/CalendarNav.astro";
+import SummaryNavigation from "../../../../../components/SummaryNavigation.astro";
+import ContextModalIsland from "../../../../../components/ContextModalIsland.astro";
+import type { CollectionEntry } from "astro:content";
+
+// Get the route parameters
+const { year, month, day } = Astro.params;
+
+// Validate required parameters
+if (!year || !month || !day) {
+    return Astro.redirect("/no-summaries");
+}
+
+// Get all summaries
+const allSummaries = await getCollection("summaries");
+
+// Find the matching summary by comparing date components and index
+const summary = allSummaries.find((entry: CollectionEntry<"summaries">) => {
+    const date = entry.data.date;
+    const entryYear = date.getFullYear().toString();
+    const entryMonth = String(date.getMonth() + 1).padStart(2, "0");
+    const entryDay = String(date.getDate()).padStart(2, "0");
+
+    return entryYear === year && entryMonth === month && entryDay === day;
+});
+
+// If no matching summary, redirect
+if (!summary) {
+    return Astro.redirect("/no-summaries");
+}
+
+// Render the summary content
+const { Content } = await summary.render();
+
+// Format date for UI
+const formattedDate = summary.data.date.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+});
+---
+
+<SummaryLayout title={summary.data.title || `Summary for ${formattedDate}`}>
+    <div class="flex flex-col md:flex-row gap-8">
+        <div class="md:w-3/4">
+            <h1 class="text-3xl font-bold mb-1">
+                {summary.data.title || `Summary for ${formattedDate}`}
+            </h1>
+            <p class="text-gray-600 mb-6">{formattedDate}</p>
+
+            <SummaryNavigation
+                currentSummary={summary}
+                allSummaries={allSummaries}
+            />
+
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="prose prose-lg max-w-none">
+                    <Content />
+                </div>
+
+                <ContextModalIsland year={year} month={month} day={day} />
+            </div>
+        </div>
+
+        <div class="md:w-1/4">
+            <CalendarNav summaries={allSummaries} currentSummary={summary} />
+        </div>
+    </div>
+</SummaryLayout>

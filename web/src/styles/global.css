@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@tailwind utilities;
+@plugin "@tailwindcss/typography";
+
+
+
+
+/* Body styling */
+body {
+  @apply bg-gray-50 text-gray-900 min-h-screen;
+} 

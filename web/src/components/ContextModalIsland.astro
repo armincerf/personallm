@@ -1,0 +1,11 @@
+---
+import ContextModal from "../components/ContextModal";
+type Props = {
+    year: string;
+    month: string;
+    day: string;
+};
+const { year, month, day } = Astro.props;
+---
+
+<ContextModal client:load year={year} month={month} day={day} />

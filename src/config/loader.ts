@@ -117,16 +117,7 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
 			iMessageDbPath:
 				process.env["IMESSAGE_DB_PATH"] ||
 				`${process.env["HOME"]}/Library/Messages/chat.db`,
-
-			// RSS feeds from env if provided
-			news: {
-				...DEFAULT_CONFIG.news,
-				rssFeeds:
-					(process.env["RSS_FEEDS"]
-						?.split(",")
-						.map((s) => s.trim())
-						.filter(Boolean) as string[]) || DEFAULT_CONFIG.news.rssFeeds,
-			},
+			...DEFAULT_CONFIG.news,
 
 			// Output path from env
 			outputCsvPath:

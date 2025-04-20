@@ -201,6 +201,8 @@ out/
 
 # Generated data
 data/
+data/**/*.ctx.br
 tests/output/
+
 
 # User-specific files

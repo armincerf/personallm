@@ -1,0 +1,79 @@
+---
+import { getCollection } from "astro:content";
+import SummaryLayout from "../layouts/SummaryLayout.astro";
+import CalendarNav from "../components/CalendarNav.astro";
+import SummaryNavigation from "../components/SummaryNavigation.astro";
+import ContextModalIsland from "../components/ContextModalIsland.astro";
+
+// Get all summaries and sort by date (newest first)
+const allSummaries = await getCollection("summaries");
+
+// Sort summaries by date (descending)
+const sortedSummaries = [...allSummaries].sort((a, b) => {
+    const dateA = a.data.date.getTime();
+    const dateB = b.data.date.getTime();
+
+    if (dateA === dateB) {
+        return (b.data.index || 1) - (a.data.index || 1);
+    }
+
+    return dateB - dateA;
+});
+
+// Get the latest summary
+const latestSummary = sortedSummaries[0];
+
+// If no summaries exist, show a message
+if (!latestSummary) {
+    return Astro.redirect("/no-summaries");
+}
+
+// Render the latest summary
+const { Content } = await latestSummary.render();
+
+// Format date for UI
+const formattedDate = latestSummary.data.date.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+});
+
+// Extract date components for the API
+const year = latestSummary.data.date.getFullYear().toString();
+const month = String(latestSummary.data.date.getMonth() + 1).padStart(2, "0");
+const day = String(latestSummary.data.date.getDate()).padStart(2, "0");
+---
+
+<SummaryLayout
+    title={latestSummary.data.title || `Summary for ${formattedDate}`}
+>
+    <div class="flex flex-col md:flex-row gap-8">
+        <div class="md:w-3/4">
+            <h1 class="text-3xl font-bold mb-1">
+                {latestSummary.data.title || "Latest Summary"}
+            </h1>
+            <p class="text-gray-600 mb-6">{formattedDate}</p>
+
+            <SummaryNavigation
+                currentSummary={latestSummary}
+                allSummaries={allSummaries}
+            />
+
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="prose prose-lg max-w-none">
+                    <Content />
+                </div>
+
+                <ContextModalIsland year={year} month={month} day={day} />
+            </div>
+        </div>
+
+        <div class="md:w-1/4">
+            <CalendarNav
+                summaries={allSummaries}
+                currentSummary={latestSummary}
+            />
+        </div>
+    </div>
+</SummaryLayout>

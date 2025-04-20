@@ -1,4 +1,4 @@
-import { config } from "../config.js";
+import { config } from "../config/index.js";
 
 export async function fetchWeather(): Promise<string> {
 	const { latitude, longitude } = config.weather;

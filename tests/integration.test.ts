@@ -45,6 +45,7 @@ describe("Aggregator end‑to‑end", () => {
 
 		// Check CSV file was written
 		expect(fs.existsSync(todayCsv())).toBe(true);
+		expect(fs.existsSync(todayCsv().replace(".csv", ".ctx.br"))).toBe(true);
 		const csv = fs.readFileSync(todayCsv(), "utf8").split("\n");
 		expect(csv.length).toBeGreaterThan(1); // at least header + 1 line
 	}, 60_000); // Increase timeout to 60 seconds

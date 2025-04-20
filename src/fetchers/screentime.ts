@@ -1,5 +1,5 @@
 import { Database } from "bun:sqlite";
-import { config } from "../config.js";
+import { config } from "../config/index.js";
 import { AppUsageSchema } from "../schemas.js";
 import {
 	toAppleTimestamp,

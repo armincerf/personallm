@@ -1,5 +1,5 @@
 import { Database } from "bun:sqlite";
-import { config } from "../config.js";
+import { config } from "../config/index.js";
 import { TranscriptRowSchema } from "../schemas.js";
 
 // Example schema assumption: a table "transcripts" with columns (id, datetime, content)

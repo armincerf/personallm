@@ -16,6 +16,8 @@ A continuous data aggregation script that collects personal data from various so
 - Uses Gemini 2.5 Pro to summarize collected data with Markdown formatting
 - Runs periodically with PM2
 - Stores summaries in a timestamped CSV file
+- Saves raw context data in compressed .ctx.br files for reference
+- Uses previous day's summary to avoid repetition in new summaries
 
 ## Technical Features
 
@@ -30,6 +32,7 @@ A continuous data aggregation script that collects personal data from various so
 - CSV handling with proper escaping of quotes and newlines
 - Graceful shutdown handling for SIGINT/SIGTERM signals
 - Strong TypeScript typing with strict compiler options
+- Context storage as Brotli-compressed JSON Lines for compactness (even smaller than plain text)
 
 ## Setup
 
@@ -107,6 +110,20 @@ For Screen Time, Mail, and Calendar access, you might need to grant permissions:
 ## Logs
 
 When running with PM2, logs are stored in the `logs` directory.
+
+## Data Storage
+
+All data is stored in the `./data` directory relative to the project root:
+
+```
+data/
+ └─ YYYY/
+     └─ MM/
+         ├─ DD.csv         # Daily summaries
+         └─ DD.ctx.br      # Raw context data (Brotli‑compressed JSON Lines)
+```
+
+The .ctx.br files contain the complete raw data fetched from all sources in the most recent run, compressed to save disk space. Each new run overwrites the previous day's context file, so you'll only have the latest data for each day.
 
 ## License
 

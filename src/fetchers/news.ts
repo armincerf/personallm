@@ -1,5 +1,5 @@
 import Parser from "rss-parser";
-import { config } from "../config.js";
+import { config } from "../config/index.js";
 import { HackerNewsResponseSchema, RedditResponseSchema } from "../schemas.js";
 
 const parser = new Parser();

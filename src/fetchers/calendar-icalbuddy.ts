@@ -5,7 +5,7 @@
  * instead of AppleScript. Requires icalBuddy to be installed:
  * `brew install ical-buddy`
  */
-import { config } from "../config.js";
+import { config } from "../config/index.js";
 
 const TIMEOUT_MS = 3_000; // icalBuddy is instant; fail fast
 const DELIM = " || "; // keep the same delimiter you parse later

@@ -1,0 +1,40 @@
+---
+import SummaryLayout from "../layouts/SummaryLayout.astro";
+---
+
+<SummaryLayout title="No Summaries Available">
+    <div class="flex items-center justify-center min-h-[50vh]">
+        <div class="bg-white p-8 rounded-lg shadow-md text-center max-w-lg">
+            <h1 class="text-3xl font-bold mb-4">No Summaries Available</h1>
+
+            <p class="text-lg text-gray-600 mb-6">
+                There are currently no summaries in your content collection.
+            </p>
+
+            <div class="bg-gray-100 p-4 rounded-lg text-left mb-6">
+                <h2 class="text-lg font-medium mb-2">How to Add Summaries</h2>
+                <ol class="list-decimal list-inside space-y-2">
+                    <li>
+                        Create a new file in <code
+                            class="bg-gray-200 px-2 py-1 rounded"
+                            >src/content/summaries/</code
+                        > with the format <code
+                            class="bg-gray-200 px-2 py-1 rounded"
+                            >YYYY-MM-DD-N.md</code>
+                    </li>
+                    <li>Add the required frontmatter (date, index, title)</li>
+                    <li>Write your summary content in Markdown</li>
+                    <li>Place any context files in the proper location</li>
+                </ol>
+            </div>
+
+            <a
+                href="/"
+                class="inline-block px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+            >
+                Refresh Home Page
+            </a>
+        </div>
+    </div>
+</SummaryLayout>
+
