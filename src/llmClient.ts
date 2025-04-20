@@ -1,52 +1,36 @@
+import { GoogleGenAI } from "@google/genai";
 import { config } from "./config.js";
 
-interface GeminiResponse {
-  summary?: string;
-  choices?: Array<{
-    message?: {
-      content: string;
-    };
-  }>;
-  error?: {
-    message: string;
-  };
-}
+// Initialize the SDK client
+const genAI = new GoogleGenAI({ apiKey: config.geminiApiKey });
 
 export async function summarizeWithLLM(fullContext: string): Promise<string> {
-  // Construct request payload
-  const payload = {
-    model: "gemini-2.5-pro",         // hypothetical model identifier
-    prompt: fullContext,            // sending the entire context as the prompt
-    max_tokens: 1000,               // expected max length of summary (adjust as needed)
-    temperature: 0.2                // example parameter for a concise summary
-  };
-  try {
-    const res = await fetch(config.geminiApiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${config.geminiApiKey}`
-      },
-      body: JSON.stringify(payload)
-    });
-    if (!res.ok) {
-      throw new Error(`LLM API error: ${res.status}`);
-    }
-    const data = await res.json() as GeminiResponse;
-    
-    // Handle error in response
-    if (data.error) {
-      throw new Error(`Gemini API error: ${data.error.message}`);
-    }
-    
-    // Assuming the API returns the summary text in a field `summary` or similar.
-    const summaryText = data.summary || 
-                        data.choices?.[0]?.message?.content || 
-                        "(No summary was generated)";
-    
-    return summaryText;
-  } catch (err) {
-    console.error("LLM summarization failed:", err);
-    return "(LLM summarization error)";
-  }
-} 
+	try {
+		// Make the API call using the SDK
+		const result = await genAI.models.generateContent({
+			model: config.geminiModelName,
+			contents: [
+				{ role: "user", parts: [{ text: config.prompt }] },
+				{ role: "user", parts: [{ text: fullContext }] },
+			],
+		});
+
+		// Extract the text from the first candidate's content using optional chaining
+		const summaryText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+		if (!summaryText) {
+			console.warn("LLM response text was empty or in unexpected format.");
+			return "(No summary was generated)";
+		}
+
+		return summaryText;
+	} catch (err) {
+		// Log the specific error from the SDK or network failure
+		console.error("LLM summarization failed:", err);
+		// You might want to check err type for more specific messages
+		if (err instanceof Error) {
+			console.error("Error Details:", err.message);
+		}
+		return "(LLM summarization error)";
+	}
+}

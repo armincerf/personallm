@@ -29,8 +29,18 @@ export function fetchMailData(): string {
     if (!result) return "";
     
     // The result is expected in format "unreadCount##subject1 || subject2 || subject3 || ... || "
-    const [unreadStr, subjectsStr] = result.split(RESULT_DELIMITER);
+    const parts = result.split(RESULT_DELIMITER);
+    if (parts.length < 1) {
+      console.error("Mail script result in unexpected format:", result);
+      return "";
+    }
+    const unreadStr = parts[0];
+    const subjectsStr = parts[1] || "";
     const unreadCount = Number.parseInt(unreadStr, 10);
+    if (Number.isNaN(unreadCount)) {
+      console.error("Invalid unread count from mail script:", unreadStr);
+      return "";
+    }
     let output = `Mail: ${unreadCount} unread`;
     
     if (subjectsStr) {

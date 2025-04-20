@@ -9,10 +9,11 @@ A continuous data aggregation script that collects personal data from various so
   - Meeting transcripts from SQLite database
   - macOS Screen Time usage
   - Weather data (using Open-Meteo API)
-  - News from BBC, Hacker News, and Reddit
+  - News from multiple RSS feeds, Hacker News, and Reddit (with clickable links)
   - Mail data (using macOS AppleScript)
   - Calendar events (using macOS AppleScript)
-- Uses Gemini 2.5 Pro to summarize collected data
+  - iMessage conversations (directly from Messages SQLite database)
+- Uses Gemini 2.5 Pro to summarize collected data with Markdown formatting
 - Runs periodically with PM2
 - Stores summaries in a timestamped CSV file
 
@@ -23,6 +24,8 @@ A continuous data aggregation script that collects personal data from various so
 - Safe AppleScript execution via stdin piping
 - Robust SQLite date filtering that works with any datetime format
 - Automatic detection of ScreenTime database timestamp format (seconds or nanoseconds)
+- RSS feeds filtered to only show today's news
+- News items include clickable links in Markdown format
 - XML parsing that handles CDATA sections and attributes
 - CSV handling with proper escaping of quotes and newlines
 - Graceful shutdown handling for SIGINT/SIGTERM signals
@@ -61,11 +64,12 @@ bun run setup
 
 ## Manual Configuration (Alternative to Setup Script)
 
-If you prefer to configure manually, edit the `src/config.ts` file:
+If you prefer to configure manually, edit the `.env` file:
 - Set API keys
 - Configure data source paths
 - Set aggregation interval
 - Enable/disable specific data sources
+- Configure RSS feeds (comma-separated list in RSS_FEEDS)
 
 ## PM2 Deployment
 

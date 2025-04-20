@@ -1,43 +1,51 @@
 import { readFileSync } from "node:fs";
+import path from "node:path";
 import { config } from "../config.js";
-
-interface HealthData {
-  date: string;
-  steps?: number;
-  calories?: number;
-  heartRate?: number;
-  [key: string]: unknown;
-}
+import { HealthDataSchema } from "../schemas.js";
 
 // Fetch health data from local JSON files
 export function fetchHealthData(): string {
-  const summaries: string[] = [];
-  for (const filePath of config.healthDataPaths) {
-    try {
-      const raw = readFileSync(filePath, "utf-8");
-      const data: HealthData | HealthData[] = JSON.parse(raw);
-      // If the JSON is an array of records, consider the latest entry
-      let latest: HealthData;
-      if (Array.isArray(data)) {
-        latest = data[data.length - 1];
-      } else {
-        latest = data;
-      }
-      // Simplify the health data to key metrics
-      const { steps, calories, heartRate } = latest;
-      const summary = [
-        steps !== undefined ? `steps: ${steps}` : null,
-        calories !== undefined ? `calories: ${calories}` : null,
-        heartRate !== undefined ? `heartRate: ${heartRate}` : null
-      ].filter(Boolean).join(", ");
-      if (summary) {
-        summaries.push(summary);
-      }
-    } catch (err) {
-      console.error(`Health data fetch error for file ${filePath}:`, err);
-      // Continue to next file on error (file not found or parse issue)
-    }
-  }
-  if (summaries.length === 0) return "";  // no data
-  return `Health Data: ${summaries.join(" | ")}`;
-} 
+	if (!config.enableHealth) {
+		console.log("Health data fetcher is disabled");
+		return "";
+	}
+	// Determine today's Health Auto Export JSON file
+	const now = new Date();
+	const YYYY = now.getFullYear().toString();
+	const MM = String(now.getMonth() + 1).padStart(2, "0");
+	const DD = String(now.getDate()).padStart(2, "0");
+	const filename = `HealthAutoExport-${YYYY}-${MM}-${DD}.json`;
+	const filePath = path.join(config.healthDataDir, filename);
+	try {
+		const raw = readFileSync(filePath, "utf-8");
+		const parsedJson = JSON.parse(raw);
+		const parsed = HealthDataSchema.safeParse(parsedJson);
+		if (!parsed.success) {
+			console.error(
+				`Health data validation error for file ${filePath}:`,
+				parsed.error.format(),
+			);
+			return "";
+		}
+		const data = parsed.data;
+		// If the JSON is an array of records, consider the latest entry
+		const latest = Array.isArray(data) ? data[data.length - 1] : data;
+		// Extract key metrics
+		const parts: string[] = [];
+		if (latest.steps !== undefined) {
+			parts.push(`steps: ${latest.steps}`);
+		}
+		if (latest.calories !== undefined) {
+			parts.push(`calories: ${latest.calories}`);
+		}
+		if (latest.heartRate !== undefined) {
+			parts.push(`heartRate: ${latest.heartRate}`);
+		}
+		if (parts.length > 0) {
+			return `Health Data: ${parts.join(", ")}`;
+		}
+	} catch (err) {
+		console.error(`Health data fetch error for file ${filePath}:`, err);
+	}
+	return "";
+}

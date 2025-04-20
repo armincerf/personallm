@@ -2,11 +2,12 @@ import {
 	describe,
 	it,
 	expect,
-	vi,
 	beforeEach,
 	afterEach,
 	type Mock,
-} from "vitest";
+	mock,
+	spyOn,
+} from "bun:test";
 
 // Define a minimal shape of what the fetch mock and its response look like
 interface MockFetchResponse {
@@ -16,7 +17,6 @@ interface MockFetchResponse {
 }
 
 type FetchFn = (url: string, init?: RequestInit) => Promise<MockFetchResponse>;
-
 
 type MockFetch = Mock<FetchFn>;
 
@@ -92,17 +92,17 @@ describe("Weather fetcher tests", () => {
 		mockResponse = {
 			ok: true,
 			status: 200,
-			json: vi.fn().mockResolvedValue({}),
+			json: mock().mockResolvedValue({}),
 		};
-		mockFetch = vi.fn().mockResolvedValue(mockResponse);
+		mockFetch = mock().mockResolvedValue(mockResponse);
 		fetchWeather = createWeatherFetcher(mockFetch);
 
-		vi.spyOn(console, "log").mockImplementation(() => {});
-		vi.spyOn(console, "error").mockImplementation(() => {});
+		spyOn(console, "log").mockImplementation(() => {});
+		spyOn(console, "error").mockImplementation(() => {});
 	});
 
 	afterEach(() => {
-		vi.restoreAllMocks();
+		mockFetch.mockRestore();
 	});
 
 	it("should fetch weather data and format it correctly", async () => {
@@ -114,7 +114,7 @@ describe("Weather fetcher tests", () => {
 				precipitation_sum: [0],
 			},
 		};
-		mockResponse.json = vi.fn().mockResolvedValueOnce(mockData);
+		mockResponse.json = mock().mockResolvedValueOnce(mockData);
 
 		const result = await fetchWeather();
 
@@ -135,7 +135,7 @@ describe("Weather fetcher tests", () => {
 				precipitation_sum: [3],
 			},
 		};
-		mockResponse.json = vi.fn().mockResolvedValueOnce(mockData);
+		mockResponse.json = mock().mockResolvedValueOnce(mockData);
 
 		const result = await fetchWeather();
 

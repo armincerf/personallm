@@ -8,18 +8,24 @@
     "pm2": "pm2 start pm2_process.json",
     "setup": "bun setup.ts",
     "postinstall": "bun postinstall.ts",
-    "test": "vitest run"
+    "test": "bun test tests",
+    "test:unit": "bun test tests/basic.test.ts tests/fetchers.test.ts tests/llmClient.test.ts",
+    "test:reachability": "bun test tests/fetchers/reachability",
+    "test:integration": "bun test tests/integration.test.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "@types/bun": "latest",
-    "vitest": "^3.1.1"
+    "@types/bun": "^1.2.10",
+    "dotenv": "^16.5.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "bun-types": "latest"
+    "@google/genai": "^0.9.0",
+    "bun-types": "latest",
+    "rss-parser": "^3.13.0",
+    "zod": "^3.22.0"
   },
   "trustedDependencies": [
     "@biomejs/biome"

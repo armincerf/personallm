@@ -1,105 +1,102 @@
+import Parser from "rss-parser";
 import { config } from "../config.js";
-import { extractElements } from "../utils/xml-parser.js";
+import { HackerNewsResponseSchema, RedditResponseSchema } from "../schemas.js";
 
-// Helper to fetch text from a URL
-async function fetchText(url: string, options: RequestInit = {}): Promise<string> {
-  const res = await fetch(url, options);
-  if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`);
-  return res.text();
+const parser = new Parser();
+const TODAY = new Date(); // evaluated once per run
+
+/* ---------- utilities ---------- */
+function isToday(pubDate?: string): boolean {
+	if (!pubDate) return false;
+	const d = new Date(pubDate);
+	return (
+		d.getUTCFullYear() === TODAY.getUTCFullYear() &&
+		d.getUTCMonth() === TODAY.getUTCMonth() &&
+		d.getUTCDate() === TODAY.getUTCDate()
+	);
 }
 
-// Fetch BBC News headlines via RSS
-async function fetchBBC(): Promise<string[]> {
-  try {
-    const rssText = await fetchText(config.news.bbcRssUrl);
-    
-    // Use the more robust XML parser instead of regex
-    const titles = extractElements(rssText, "title");
-    
-    // First title is usually the feed title, so skip it
-    if (titles.length > 0) titles.shift();
-    
-    return titles.slice(0, config.news.numTopPosts);
-  } catch (err) {
-    console.error("BBC news fetch error:", err);
-    return [];
-  }
+/* ---------- RSS ---------- */
+async function fetchRSS(): Promise<string[]> {
+	const headlines: string[] = [];
+	for (const feedUrl of config.news.rssFeeds) {
+		try {
+			const feed = await parser.parseURL(feedUrl);
+			const todayItems =
+				feed.items
+					?.filter((it) => isToday(it.pubDate))
+					.slice(0, config.news.numTopPosts) || [];
+
+			for (const it of todayItems) {
+				const link = it.link ?? feedUrl;
+				headlines.push(`[${it.title}](${link})`);
+			}
+		} catch (err) {
+			console.error(`RSS fetch error for ${feedUrl}:`, err);
+		}
+	}
+	return headlines;
 }
 
-interface HackerNewsHit {
-  title: string;
-}
-
-interface HackerNewsResponse {
-  hits: HackerNewsHit[];
-}
-
-// Fetch Hacker News top story titles using HN Algolia API
+/* ---------- Hacker News ---------- */
 async function fetchHackerNews(): Promise<string[]> {
-  const HN_API = "https://hn.algolia.com/api/v1/search?tags=front_page";
-  try {
-    const response = await fetch(HN_API);
-    const json = await response.json() as HackerNewsResponse;
-    if (!json.hits) return [];
-    return json.hits.slice(0, config.news.numTopPosts).map(item => item.title);
-  } catch (err) {
-    console.error("Hacker News fetch error:", err);
-    return [];
-  }
+	if (!config.news.includeHackerNews) return [];
+	const HN_API = `https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=${config.news.numTopPosts}`;
+	try {
+		const res = await fetch(HN_API);
+		const json = await res.json();
+		const parsed = HackerNewsResponseSchema.safeParse(json);
+		if (!parsed.success) return [];
+		return parsed.data.hits.map((h) => {
+			const link =
+				h.url ?? `https://news.ycombinator.com/item?id=${h.objectID}`;
+			return `[${h.title}](${link})`;
+		});
+	} catch (err) {
+		console.error("Hacker News fetch error:", err);
+		return [];
+	}
 }
 
-interface RedditPost {
-  data: {
-    title: string;
-  };
+/* ---------- Reddit ---------- */
+async function fetchReddit(): Promise<string[]> {
+	const out: string[] = [];
+	for (const sub of config.news.subreddits) {
+		const url = `https://www.reddit.com/r/${sub}/top.json?t=day&limit=${config.news.numTopPosts}`;
+		try {
+			const res = await fetch(url, {
+				headers: { "User-Agent": "BunNewsFetcher/1.0" },
+			});
+			const json = await res.json();
+			const parsed = RedditResponseSchema.safeParse(json);
+			if (!parsed.success) continue;
+
+			const children = parsed.data.data?.children;
+			if (!children) continue;
+
+			for (const child of children) {
+				const { title, permalink } = child.data;
+				out.push(`[${title}](https://reddit.com${permalink})`);
+			}
+		} catch (err) {
+			console.error(`Reddit fetch error (${sub}):`, err);
+		}
+	}
+	return out;
 }
 
-interface RedditResponse {
-  data?: {
-    children?: RedditPost[];
-  };
-}
-
-// Fetch top posts from specified subreddits (using Reddit JSON)
-async function fetchReddit(): Promise<Record<string, string[]>> {
-  const results: Record<string, string[]> = {};
-  for (const sub of config.news.subreddits) {
-    const url = `https://www.reddit.com/r/${sub}/top.json?t=day&limit=${config.news.numTopPosts}`;
-    try {
-      const res = await fetch(url, {
-        headers: { "User-Agent": "BunNewsFetcher/1.0" }  // custom UA to avoid 429 error
-      });
-      if (!res.ok) throw new Error(`Reddit API HTTP ${res.status}`);
-      const data = await res.json() as RedditResponse;
-      const posts = data.data?.children?.map(child => child.data.title) || [];
-      results[sub] = posts.slice(0, config.news.numTopPosts);
-    } catch (err) {
-      console.error(`Reddit fetch error for r/${sub}:`, err);
-      results[sub] = [];
-    }
-  }
-  return results;
-}
-
+/* ---------- Public API ---------- */
 export async function fetchNews(): Promise<string> {
-  const sections: string[] = [];
-  const bbcHeadlines = config.news.bbcRssUrl ? await fetchBBC() : [];
-  if (bbcHeadlines.length) {
-    sections.push(`BBC: ${bbcHeadlines.join(" | ")}`);
-  }
-  if (config.news.includeHackerNews) {
-    const hnHeadlines = await fetchHackerNews();
-    if (hnHeadlines.length) {
-      sections.push(`Hacker News: ${hnHeadlines.join(" | ")}`);
-    }
-  }
-  if (config.news.subreddits.length) {
-    const redditData = await fetchReddit();
-    for (const [sub, titles] of Object.entries(redditData)) {
-      if (titles.length) {
-        sections.push(`Reddit (${sub}): ${titles.join(" | ")}`);
-      }
-    }
-  }
-  return sections.length ? `News: ${sections.join(" || ")}` : "";
-} 
+	const [rss, hn, reddit] = await Promise.all([
+		fetchRSS(),
+		fetchHackerNews(),
+		fetchReddit(),
+	]);
+
+	const sections: string[] = [];
+	if (rss.length) sections.push(`RSS: ${rss.join(" | ")}`);
+	if (hn.length) sections.push(`Hacker News: ${hn.join(" | ")}`);
+	if (reddit.length) sections.push(`Reddit: ${reddit.join(" | ")}`);
+
+	return sections.length ? `News: ${sections.join(" || ")}` : "";
+}

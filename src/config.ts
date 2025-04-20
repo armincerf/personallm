@@ -1,88 +1,89 @@
 // src/config.ts
+import { ConfigSchema } from "./schemas.js";
 
-// Define types for the config object for better type safety
-interface WeatherConfig {
-    latitude: number;
-    longitude: number;
-    useDaily: boolean;
-    useCurrent: boolean;
-  }
-  
-  interface NewsConfig {
-    bbcRssUrl: string;
-    includeHackerNews: boolean;
-    subreddits: string[];
-    numTopPosts: number;
-  }
-  
-  interface AppConfig {
-    intervalMinutes: number;
-    prompt: string;
-    healthDataPaths: string[];
-    transcriptsDbPath: string;
-    screenTimeDbPath: string;
-    weather: WeatherConfig;
-    news: NewsConfig;
-    geminiApiUrl: string;
-    geminiApiKey: string;
-    outputCsvPath: string;
-    enableScreenTime: boolean;
-    enableMail: boolean;
-    enableCalendar: boolean;
-  }
-  
-  // Helper to read env vars via bracket notation with a default
-  function env(key: string, defaultValue: string): string {
-    return process.env[key] ?? defaultValue;
-  }
-  
-  // Export the typed config object
-  export const config: AppConfig = {
-    // Interval in minutes (e.g., 60 for hourly)
-    intervalMinutes: Number(env("INTERVAL_MINUTES", "60")),
-  
-    // Prompt to instruct the LLM on how to summarize the data.
-    prompt: env("LLM_PROMPT", "Summarize the following information for my daily overview:"),
-  
-    // Paths to local data sources
-    healthDataPaths: [
-      env("HEALTH_DATA_PATH", "/Users/yourusername/Health/health_data.json"),
-      env("WORKOUTS_DATA_PATH", "/Users/yourusername/Health/workouts.json")
-    ],
-    transcriptsDbPath: env("TRANSCRIPTS_DB_PATH", "/Users/yourusername/Data/meetings.sqlite"),
-    screenTimeDbPath: env(
-      "SCREEN_TIME_DB_PATH",
-      "/Users/yourusername/Library/Application Support/ScreenTimeAgent/Database/CoreDuetData.db"
-    ),
-  
-    // Weather API configuration
-    weather: {
-      latitude: Number(env("LATITUDE", "51.503")),
-      longitude: Number(env("LONGITUDE", "-0.1276")),
-      useDaily: env("USE_DAILY_WEATHER", "true") === "true",
-      useCurrent: env("USE_CURRENT_WEATHER", "true") === "true"
-    },
-  
-    // News sources configuration
-    news: {
-      bbcRssUrl: env("BBC_RSS_URL", "https://feeds.bbci.co.uk/news/rss.xml"),
-      includeHackerNews: env("INCLUDE_HN", "true") === "true",
-      subreddits: env("SUBREDDITS", "worldnews,technology")
-        .split(",")
-        .map((s) => s.trim()),
-      numTopPosts: Number(env("NUM_TOP_POSTS", "5"))
-    },
-  
-    // Gemini LLM API details
-    geminiApiUrl: env("GEMINI_API_URL", "https://api.gemini.com/v1/summarize"),
-    geminiApiKey: env("GEMINI_API_KEY", ""),
-  
-    // Output file for summaries
-    outputCsvPath: env("OUTPUT_CSV_PATH", "/Users/yourusername/Data/summaries.csv"),
-  
-    // Toggles for optional data
-    enableScreenTime: env("ENABLE_SCREEN_TIME", "false") === "true",
-    enableMail: env("ENABLE_MAIL", "false") === "true",
-    enableCalendar: env("ENABLE_CALENDAR", "false") === "true"
-  };
-  
+/* ---------- safety guards ---------- */
+if (!process.env["GEMINI_API_KEY"]) {
+	console.error(
+		"❌ FATAL ERROR: GEMINI_API_KEY environment variable is not set.",
+	);
+	process.exit(1);
+}
+
+/* ---------- build raw config ---------- */
+const rawConfig = {
+	/* ——— intervals & secrets stay backed by env ——— */
+	intervalMinutes: Number(process.env["INTERVAL_MINUTES"] || 60),
+	geminiModelName:
+		process.env["GEMINI_MODEL_NAME"] || "gemini-2.5-flash-preview-04-17",
+	geminiApiKey: process.env["GEMINI_API_KEY"] || "",
+
+	/* ——— host‑specific paths still read from env ——— */
+	healthDataDir:
+		process.env["HEALTH_DATA_DIR"] || process.env["HEALTH_DATA_PATH"],
+	transcriptsDbPath: process.env["TRANSCRIPTS_DB_PATH"],
+	screenTimeDbPath: process.env["SCREEN_TIME_DB_PATH"],
+	iMessageDbPath:
+		process.env["IMESSAGE_DB_PATH"] ||
+		`${process.env["HOME"]}/Library/Messages/chat.db`,
+
+	/* ——— static defaults / toggles ——— */
+	weather: {
+		latitude: 51.503,
+		longitude: -0.1276,
+	},
+
+	enableScreenTime: false,
+	enableMail: false,
+	enableCalendar: true,
+	enableCalendarIcalBuddy: true,
+	enableHealth: false,
+	enableTranscripts: false,
+	enableIMessage: true,
+
+	/** chats to fetch (chat_identifier OR full iMessage address fetched from chat.db) */
+	iMessageChatsToRead: [
+		// Family
+		"1",
+		"128",
+
+		// T & D
+		"5",
+	],
+
+	news: {
+		/** Comma‑separated list of RSS feeds */
+		rssFeeds: (process.env["RSS_FEEDS"]
+			?.split(",")
+			.map((s) => s.trim())
+			.filter(Boolean) as string[] | undefined) ?? [
+			"https://feeds.bbci.co.uk/news/rss.xml?edition=uk",
+		],
+		includeHackerNews: true,
+		subreddits: ["worldnews", "technology", "science", "UpliftingNews"],
+		numTopPosts: 7,
+	},
+
+	// Output file for summaries
+	outputCsvPath: process.env["OUTPUT_CSV_PATH"] || "./data/summaries.csv",
+
+	prompt: `
+  You are a helpful butler assistant writing a light‑hearted summary of the user's (Alex) day.
+  - the time of day is ${new Date()
+		.toLocaleTimeString("en-GB", {
+			hour: "2-digit",
+			minute: "2-digit",
+			hour12: false,
+		})
+		.replace(/^0/, "")}
+  • Use **Markdown**.
+  • Convert each news, Reddit or Hacker News headline in the context into "[title](link)" markdown.
+  • Bullet‑points welcome; keep it short; avoid needless negativity or news about war or politics.
+  • Mention weather only if it will materially affect plans today,
+   e.g if a run is planned and there is rain forecast.
+   If you do mention it, link to the ios weather app.
+  - mention anything that the user might need to know about the day ahead, referencing messages from the user's iMessage history if relevant.
+  `,
+};
+
+/* ---------- validate ---------- */
+export const config = ConfigSchema.parse(rawConfig);
