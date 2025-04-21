@@ -1,19 +1,18 @@
-import { defineConfig } from "astro/config";
+import { defineConfig, passthroughImageService } from "astro/config";
 import node from "@astrojs/node";
 import tailwindVite from "@tailwindcss/vite";
 
 import preact from "@astrojs/preact";
 
 export default defineConfig({
-  output: "server",
+	image: {
+		service: passthroughImageService(),
+	},
+	output: "static",
 
-  adapter: node({
-      mode: "standalone",
-	}),
-
-  vite: {
-      plugins: [tailwindVite()],
+	vite: {
+		plugins: [tailwindVite()],
 	},
 
-  integrations: [preact()],
+	integrations: [preact()],
 });

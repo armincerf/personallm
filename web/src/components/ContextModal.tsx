@@ -1,5 +1,7 @@
 import { useState } from "preact/hooks";
 
+const isDev = import.meta.env.DEV;
+
 interface Props {
 	year: string;
 	month: string;
@@ -33,13 +35,15 @@ export default function ContextModal({ year, month, day }: Props) {
 
 	return (
 		<div>
-			<button
-				type="button"
-				onClick={handleClick}
-				class="mt-6 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-			>
-				{open ? "Hide Context" : "View Raw Context"}
-			</button>
+			{isDev && (
+				<button
+					type="button"
+					onClick={handleClick}
+					class="mt-6 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+				>
+					{open ? "Hide Context" : "View Raw Context"}
+				</button>
+			)}
 
 			{open && (
 				<div

@@ -3,9 +3,11 @@ import path from "node:path";
 import { config } from "../config/index.js";
 import { HealthDataSchema } from "../schemas.js";
 
+const healthErrorStr = "Error fetching health data";
+
 // Fetch health data from local JSON files
 export function fetchHealthData(): string {
-	if (!config.enableHealth) {
+	if (!config.enableHealth || !config.healthDataDir) {
 		console.log("Health data fetcher is disabled");
 		return "";
 	}
@@ -25,7 +27,7 @@ export function fetchHealthData(): string {
 				`Health data validation error for file ${filePath}:`,
 				parsed.error.format(),
 			);
-			return "";
+			return healthErrorStr;
 		}
 		const data = parsed.data;
 		// If the JSON is an array of records, consider the latest entry
@@ -47,5 +49,5 @@ export function fetchHealthData(): string {
 	} catch (err) {
 		console.error(`Health data fetch error for file ${filePath}:`, err);
 	}
-	return "";
+	return healthErrorStr;
 }

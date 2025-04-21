@@ -3,6 +3,7 @@ import { runOnce, ensureCsvExists } from "./aggregator.js";
 import { loadConfig } from "./config/loader.js";
 import { createLogger } from "./utils/logger.js";
 import { AppError } from "./errors/index.js";
+import { deployWeb } from "./deploy.js";
 
 const log = createLogger({ namespace: "scheduler" });
 
@@ -44,8 +45,6 @@ export async function mainLoop(): Promise<never> {
 
 		log.info(`- Fetchers enabled: ${enabledFetchers.join(", ") || "None"}`);
 
-		// Ensure CSV file exists - do this only once at startup
-		await ensureCsvExists(config);
 		setupGracefulShutdown(() => process.exit(0));
 
 		// Main loop
@@ -60,6 +59,10 @@ export async function mainLoop(): Promise<never> {
 				log.info(
 					`Completed cycle with ${result.rawSections.length} data sources`,
 				);
+				if (config.deployWeb) {
+					log.info("Deploying web content");
+					await deployWeb();
+				}
 			} catch (error) {
 				if (error instanceof AppError) {
 					log.error(

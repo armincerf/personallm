@@ -5,7 +5,6 @@ const summaries = defineCollection({
 		date: z.coerce.date(),
 		index: z.number().optional().default(1),
 		title: z.string().optional(),
-		contextFile: z.string().optional(),
 	}),
 });
 

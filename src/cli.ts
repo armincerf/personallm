@@ -2,6 +2,7 @@ import { createLogger } from "./utils/logger.js";
 import { mainLoop, runOnce } from "./scheduler.js";
 import { loadConfig } from "./config/loader.js";
 import { ensureCsvExists } from "./aggregator.js";
+import { deployWeb } from "./deploy.js";
 
 const log = createLogger({ namespace: "cli" });
 
@@ -10,12 +11,14 @@ export type CliOptions = {
 	setup: boolean;
 	help: boolean;
 	version: boolean;
+	deployWeb: boolean;
 };
 
 export function parseArguments(args = Bun.argv): CliOptions {
 	// Default options
 	const options: CliOptions = {
 		once: false,
+		deployWeb: false,
 		setup: false,
 		help: false,
 		version: false,
@@ -33,6 +36,8 @@ export function parseArguments(args = Bun.argv): CliOptions {
 			options.help = true;
 		} else if (arg === "--version" || arg === "-v") {
 			options.version = true;
+		} else if (arg === "--deploy-web" || arg === "-d") {
+			options.deployWeb = true;
 		}
 	}
 
@@ -84,7 +89,14 @@ export async function run(): Promise<void> {
 		log.info("Running one collection cycle");
 		await ensureCsvExists(config);
 		const result = await runOnce(config);
-		log.info(`Completed with ${result.rawSections.length} data sources`);
+		log.info(
+			`Completed with ${result.rawSections.length} data sources. deploy flag is ${options.deployWeb}`,
+		);
+		// why is the flag always false :(
+		//if (options.deployWeb) {
+		log.info("Deploying web content");
+		await deployWeb();
+		//}
 		return;
 	}
 

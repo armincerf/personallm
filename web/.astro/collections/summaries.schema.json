@@ -27,9 +27,6 @@
         "title": {
           "type": "string"
         },
-        "contextFile": {
-          "type": "string"
-        },
         "$schema": {
           "type": "string"
         }

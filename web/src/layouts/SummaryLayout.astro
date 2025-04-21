@@ -14,11 +14,11 @@ const { title } = Astro.props;
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{title}</title>
     </head>
-    <body>
+    <body class="dark:bg-gray-900 dark:text-white">
         <header class="bg-gray-800 text-white p-4 shadow-md">
             <div class="container mx-auto flex justify-between items-center">
                 <h1 class="text-2xl font-bold">
-                    <a href="/" class="hover:underline">PersonalLM Summaries</a>
+                    <a href="/" class="hover:underline">{title}</a>
                 </h1>
                 <nav>
                     <a href="/archive" class="hover:underline">Archive</a>
@@ -26,13 +26,15 @@ const { title } = Astro.props;
             </div>
         </header>
 
-        <main class="container mx-auto py-8 px-4">
+        <main class="container mx-auto px-4">
             <slot />
         </main>
 
-        <footer class="bg-gray-100 p-4 text-center text-gray-600 text-sm">
+        <footer
+            class="bg-gray-100 dark:bg-gray-800 p-4 text-center text-gray-600 dark:text-gray-300 text-sm"
+        >
             <div class="container mx-auto">
-                <p>© {new Date().getFullYear()} PersonalLM Summaries</p>
+                <p>© {new Date().getFullYear()} PersonaLLM Summaries</p>
             </div>
         </footer>
 
@@ -42,15 +44,15 @@ const { title } = Astro.props;
             class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center hidden z-50"
         >
             <div
-                class="bg-white p-6 max-w-4xl max-h-[90vh] w-full overflow-auto rounded-lg shadow-xl"
+                class="bg-white dark:bg-gray-800 p-6 max-w-4xl max-h-[90vh] w-full overflow-auto rounded-lg shadow-xl dark:text-white"
             >
                 <h2 class="text-xl font-bold mb-4">Raw Context</h2>
                 <pre
                     id="context-pre"
-                    class="text-sm bg-gray-100 p-4 rounded overflow-auto max-h-[70vh]">Loading...</pre>
+                    class="text-sm bg-gray-100 dark:bg-gray-700 p-4 rounded overflow-auto max-h-[70vh] dark:text-gray-200">Loading...</pre>
                 <button
                     id="close-modal"
-                    class="mt-4 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                    class="mt-4 px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded hover:bg-gray-300 dark:hover:bg-gray-500 dark:text-white transition"
                     >Close</button
                 >
             </div>

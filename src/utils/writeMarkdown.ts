@@ -46,16 +46,11 @@ export async function writeSummaryAsMd({
 	const baseName = `${DD}-${index}`;
 	const mdPath = path.join(mdDir, `${baseName}.md`);
 
-	// Context Filename (just the name for front-matter reference)
-	const ctxFileName = `${DD}.ctx.br`; // e.g., 20.ctx.br
-
 	// Prepare front‑matter
 	const fm = {
 		date: `${YYYY}-${MM}-${DD}`, // Format for Astro/YAML
 		index,
 		...(title ? { title } : {}),
-		// Reference the context file name. The aggregator writes this separately.
-		contextFile: ctxFileName,
 	};
 
 	// Stringify Markdown + front‑matter

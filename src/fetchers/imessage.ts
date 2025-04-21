@@ -8,9 +8,12 @@ import {
 
 const FORTNIGHT_SEC = 14 * 24 * 60 * 60;
 const MAX_ROWS = 20;
+const iMessageErrorStr = "Error fetching iMessage data";
 
 export function fetchIMessage(): string {
-	if (!config.enableIMessage || !config.iMessageDbPath) return "";
+	console.log("fetchIMessage", config.iMessageDbPath);
+	if (!config.enableIMessage || !config.iMessageDbPath) return iMessageErrorStr;
+	console.log("fetchIMessage", config.iMessageDbPath);
 
 	try {
 		const db = new Database(config.iMessageDbPath, { readonly: true });
@@ -78,6 +81,6 @@ export function fetchIMessage(): string {
 		return sections.join("\n\n");
 	} catch (err) {
 		console.error("iMessage fetch error:", err);
-		return "";
+		return iMessageErrorStr;
 	}
 }

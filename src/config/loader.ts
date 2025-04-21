@@ -17,6 +17,7 @@ export type NewsConfig = {
 };
 
 export type Config = {
+	deployWeb: boolean;
 	intervalMinutes: number;
 	geminiModelName: string;
 	geminiApiKey: string;
@@ -46,9 +47,13 @@ export type Config = {
 };
 
 const DEFAULT_CONFIG: Config = {
+	// should static site be deployed after each run?
+	deployWeb: true,
+
 	// Interval and API settings
 	intervalMinutes: 60,
-	geminiModelName: "gemini-2.5-flash-preview-04-17",
+	//geminiModelName: "gemini-2.5-flash-preview-04-17",
+	geminiModelName: "gemini-2.5-pro-preview-03-25",
 	geminiApiKey: "",
 
 	// Weather defaults (London)
@@ -82,11 +87,20 @@ const DEFAULT_CONFIG: Config = {
 
 	// LLM prompt
 	prompt: `
-  You are a helpful assistant writing a light‑hearted morning brief.
+  You are a helpful assistant writing a light‑hearted brief, the time now is ${new Date().toLocaleTimeString()}.
   • Use **Markdown**.
   • Convert each news, Reddit or Hacker News headline in the context into "[title](link)" markdown.
-  • Bullet‑points welcome; keep it short; avoid needless negativity.
+  • Bullet‑points welcome; keep it short; avoid negativity unless it's a joke.
   • Mention weather only if it will materially affect plans today.
+  • The user is a 30‑year‑old man named Alex who likes exercise and works in tech.
+  - your most important job is to make sure alex does his exercise.
+   so if its going to rain and he has a run planned let him know the best times to go out.
+   cycling is usually done indoors so weather not so important.
+   Runs are not good when its dark, so suggest times when it's light.
+   do not have an opinion or try to be creative, just write the facts in an informative but engaging way.
+   there may be duplicates in the context, do not repeat yourself. alex always follows holidays even if work events are planned.
+   Always include a joke referencing either the news or tara being large.
+   News is the least important thing, so put it last in the markdown.
   `,
 };
 
@@ -100,6 +114,7 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
 		// Build config from defaults, environment variables and overrides
 		const config = {
 			...DEFAULT_CONFIG,
+			deployWeb: true,
 
 			// Interval & API settings from env
 			intervalMinutes:

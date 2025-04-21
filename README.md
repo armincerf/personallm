@@ -2,6 +2,39 @@
 
 A continuous data aggregation script that collects personal data from various sources, summarizes it using Gemini 2.5 Pro LLM, and stores the results in a CSV file.
 
+
+## Usage 
+
+Install dependencies for the summary generator:
+```bash
+bun install
+```
+
+Install dependencies for the web view:
+```bash
+cd web
+bun install
+```
+
+If you want calendar events you need to install icalBuddy:
+```bash
+brew install icalbuddy
+```
+
+Grant full disk access to the terminal application you want to use to run the summary generator.
+
+Run the summary generator:
+```bash
+bun run src/cli.ts --once
+```
+
+Run the web view:
+```bash
+cd web
+bun run dev
+```
+
+
 ## Features
 
 - Collects data from multiple sources:

@@ -2,6 +2,22 @@ import { readFileSync } from "node:fs";
 import { brotliDecompressSync } from "node:zlib";
 import path from "node:path";
 import type { APIRoute } from "astro";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+	const allSummaries = await getCollection("summaries");
+
+	return allSummaries.map((entry) => {
+		const date = entry.data.date;
+		const year = date.getFullYear().toString();
+		const month = String(date.getMonth() + 1).padStart(2, "0");
+		const day = String(date.getDate()).padStart(2, "0");
+
+		return {
+			params: { year, month, day },
+		};
+	});
+}
 
 // Helper to get context file path
 function getContextFilePath(year: string, month: string, day: string): string {

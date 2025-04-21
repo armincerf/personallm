@@ -26,8 +26,8 @@ const sortedSummaries = [...allSummaries].sort((a, b) => {
 
       {
         sortedSummaries.length > 0 ? (
-          <div class="bg-white p-6 rounded-lg shadow-md">
-            <ul class="divide-y">
+          <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+            <ul class="divide-y dark:divide-gray-700">
               {sortedSummaries.map((summary) => {
                 const date = summary.data.date;
                 const formattedDate = date.toLocaleDateString("en-US", {
@@ -47,12 +47,14 @@ const sortedSummaries = [...allSummaries].sort((a, b) => {
                   <li class="py-4 first:pt-0 last:pb-0">
                     <a
                       href={path}
-                      class="block hover:bg-gray-50 p-2 -m-2 rounded"
+                      class="block hover:bg-gray-50 dark:hover:bg-gray-700 p-2 -m-2 rounded"
                     >
-                      <p class="font-medium text-lg text-blue-600">
+                      <p class="font-medium text-lg text-blue-600 dark:text-blue-400">
                         {summary.data.title || `Summary #${index}`}
                       </p>
-                      <p class="text-gray-600">{formattedDate}</p>
+                      <p class="text-gray-600 dark:text-gray-400">
+                        {formattedDate}
+                      </p>
                     </a>
                   </li>
                 );
@@ -60,8 +62,10 @@ const sortedSummaries = [...allSummaries].sort((a, b) => {
             </ul>
           </div>
         ) : (
-          <div class="bg-white p-6 rounded-lg shadow-md text-center">
-            <p class="text-lg text-gray-600">No summaries available yet.</p>
+          <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center">
+            <p class="text-lg text-gray-600 dark:text-gray-400">
+              No summaries available yet.
+            </p>
           </div>
         )
       }
@@ -72,4 +76,3 @@ const sortedSummaries = [...allSummaries].sort((a, b) => {
     </div>
   </div>
 </SummaryLayout>
-

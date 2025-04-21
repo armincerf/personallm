@@ -16,7 +16,7 @@ import {
 import { summarizeWithLLM } from "./llmClient.js";
 import { createLogger } from "./utils/logger.js";
 import { loadPreviousSummary } from "./utils/history.js";
-import { writeSummaryAsMd } from "../web/scripts/writeMarkdown.js";
+import { writeSummaryAsMd } from "./utils/writeMarkdown.js";
 
 const log = createLogger({ namespace: "aggregator" });
 const brotliCompressAsync = promisify(brotliCompress);

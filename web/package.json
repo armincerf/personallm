@@ -6,7 +6,9 @@
 	"scripts": {
 		"dev": "astro dev",
 		"build": "astro build",
-		"start": "node ./dist/server/entry.mjs"
+		"start": "node ./dist/server/entry.mjs",
+		"deploy-raw": "bun run wrangler pages deploy ./dist --project-name personallm-web-5678",
+		"deploy": "mv src/pages/api api-temp && bun run build && bun run deploy-raw && mv api-temp src/pages/api"
 	},
 	"dependencies": {
 		"@astrojs/node": "^9.2.0",
@@ -16,10 +18,11 @@
 		"preact": "^10.26.5"
 	},
 	"devDependencies": {
-		"@tailwindcss/vite": "^4.1.4",
 		"@tailwindcss/typography": "^0.5.16",
+		"@tailwindcss/vite": "^4.1.4",
 		"bun-types": "latest",
 		"tailwindcss": "^4.1.4",
-		"typescript": "^5.8.3"
+		"typescript": "^5.8.3",
+		"wrangler": "^4.12.0"
 	}
 }
